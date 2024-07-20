@@ -119,7 +119,6 @@ func (node *Node) StartListening() {
 	grpcServer := grpc.NewServer() // n is for serving purpose
 
 	rs.RegisterSyncServiceServer(grpcServer, node)
-	// reflection.Register(grpcServer)
 
 	// start listening
 	if err := grpcServer.Serve(lis); err != nil {
@@ -329,12 +328,6 @@ func (node *Node) SendScrollInternal(ctx context.Context, in *rs.ScrollRequest) 
     }
 }
 
-// func (node *Node) BecomeLeader(ctx context.Context, in *rs.LeaderRequest) (*rs.LeaderResponse, error) {
-//     node.Leader = false
-//     node.currentleader = in.GetIp()
-//     node.BroadcastNewLeader(in.GetIp())
-//     return &rs.LeaderResponse{}, nil
-// }
 
 // This works by having the requesting node call this on every other machine
 func (node *Node) UpdateLeader(ctx context.Context, in *rs.LeaderRequest) (*rs.LeaderResponse, error) {
