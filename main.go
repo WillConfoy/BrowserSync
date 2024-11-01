@@ -69,7 +69,7 @@ func handleInputs(window string, mynode *node.Node) {
 
             if !mynode.Leader && e.Rawcode != 120 {
                 continue
-            } else if !mynode.Leader && allowtransfer && e.Kind != gohook.KeyUp {
+            } else if !mynode.Leader && allowtransfer && e.Kind == gohook.KeyUp {
                 log.Println("BECOMING LEADER!!!")
                 log.Println(e)
                 mynode.Leader = true
