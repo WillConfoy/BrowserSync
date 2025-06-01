@@ -49,17 +49,17 @@ type Node struct {
 }
 
 // This function is the most basic initialization of the node
-func Start(state *s.StateInfo, machine *s.MachineInfo) Node {
+func Start(startingstate *s.StateInfo, machine *s.MachineInfo) Node {
 	log.Println("HI IT'S ME THE NODE!!!")
 	x, y := rgo.GetScreenSize()
 	// mynode := Node{Leader: leader, maxX: rgo.GetScreenRect().W, maxY: rgo.GetScreenRect().H, Window: window}
 
-	mynode := Node{Leader: state.Leader, maxX: x, maxY: y, Window: machine.Window}
+	mynode := Node{Leader: startingstate.Leader, maxX: x, maxY: y, Window: machine.Window}
 	return mynode
 }
 
 // This function does the actual running- it initializes the fields of the node before listening and starting up the heartbeat
-func (node *Node) Run(state *s.StateInfo, machine *s.MachineInfo) {
+func (node *Node) Run(startingstate *s.StateInfo, machine *s.MachineInfo) {
 	// node.myaddr = "localhost:" + port
 	if machine.Ip == "-1" {
 		node.myaddr = GetLocalIP() + ":" + machine.Port
@@ -68,13 +68,13 @@ func (node *Node) Run(state *s.StateInfo, machine *s.MachineInfo) {
 	}
 
 	log.Println(node.myaddr)
-	state.Addrs = slices.DeleteFunc(state.Addrs, func(addr string) bool { return node.myaddr == addr })
+	startingstate.Addrs = slices.DeleteFunc(startingstate.Addrs, func(addr string) bool { return node.myaddr == addr })
 	node.Peers = make(map[string]rs.SyncServiceClient)
 
 	go node.StartListening()
 
 	time.Sleep(5 * time.Second)
-	node.createPeers(state.Addrs)
+	node.createPeers(startingstate.Addrs)
 	log.Println("HI I AM RUNNING")
 
 	log.Println(node.Peers)

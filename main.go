@@ -2,16 +2,22 @@ package main
 
 import (
 	"flag"
+	"log"
+	"os"
 	"strings"
+	"time"
 
 	control "cs498.com/browsersync/control"
 	gather "cs498.com/browsersync/gather"
 	s "cs498.com/browsersync/structs"
+	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/mp3"
+	"github.com/gopxl/beep/v2/speaker"
 )
 
 var (
 	manual        = flag.Bool("manual", false, "Whether to enter args manually or use website integration")
-	leader        = flag.Bool("l", false, "Current leader")
+	leader        = flag.Bool("l", false, "Original leader")
 	allowtransfer = flag.Bool("allow", true, "Whether people can take leader")
 	addrstring    = flag.String("addrs", "localhost:50051", "A space separated list of addresses with ports. Ex: 127.0.0.1:50051")
 	myport        = flag.String("port", "50051", "The port for this node to run on")
@@ -21,15 +27,36 @@ var (
 
 func main() {
 	flag.Parse()
-	var state s.StateInfo
+	var startingstate s.StateInfo
 	var machine s.MachineInfo
+	var err error
 
 	if *manual {
-		state = s.StateInfo{Leader: *leader, Allowtransfer: *allowtransfer, Addrs: strings.Split(*addrstring, " ")}
-		machine = s.MachineInfo{Port: *myport, Ip: *myip, Window: *thewindow}
+		startingstate = s.StateInfo{Leader: *leader, Allowtransfer: *allowtransfer, Addrs: strings.Split(*addrstring, " "), Initialized: true}
+		machine = s.MachineInfo{Port: *myport, Ip: *myip, Window: *thewindow, Initialized: true}
 	} else {
-		state, machine = gather.Gather()
+		startingstate, machine, err = gather.Gather()
 	}
 
-	control.Start(&state, &machine)
+	if err != nil {
+		control.Start(&startingstate, &machine)
+	} else {
+		log.Println("Error getting state! Please speak up and tell the others in the session!")
+
+		f, err := os.Open("./alerts/error_alert.mnp3")
+		if err != nil {
+			log.Fatal(err)
+		}
+		streamer, format, err := mp3.Decode(f)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+		done := make(chan bool)
+		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+			done <- true
+		})))
+		<-done
+	}
 }
