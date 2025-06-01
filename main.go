@@ -31,19 +31,26 @@ func main() {
 	var machine s.MachineInfo
 	var err error
 
-	if *manual {
-		startingstate = s.StateInfo{Leader: *leader, Allowtransfer: *allowtransfer, Addrs: strings.Split(*addrstring, " "), Initialized: true}
-		machine = s.MachineInfo{Port: *myport, Ip: *myip, Window: *thewindow, Initialized: true}
-	} else {
-		startingstate, machine, err = gather.Gather()
+	if false {
+		if *manual {
+			startingstate = s.StateInfo{Leader: *leader, Allowtransfer: *allowtransfer, Addrs: strings.Split(*addrstring, " "), Initialized: true}
+			machine = s.MachineInfo{Port: *myport, Ip: *myip, Window: *thewindow, Initialized: true}
+		} else {
+			startingstate, machine, err = gather.Gather()
+		}
 	}
 
-	if err != nil {
-		control.Start(&startingstate, &machine)
-	} else {
+	if err == nil {
 		log.Println("Error getting state! Please speak up and tell the others in the session!")
 
-		f, err := os.Open("./alerts/error_alert.mnp3")
+		// Get path to executable
+		executablePath, _ := os.Executable()
+		executablePath = strings.ReplaceAll(executablePath, "\\", "/")
+		executablePath = executablePath[:strings.LastIndex(executablePath, "/")]
+
+		// Open error_alert.mp3 using absolute path
+		relpath := "/alerts/error_alert.mp3"
+		f, err := os.Open(executablePath + relpath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -52,11 +59,14 @@ func main() {
 			log.Fatal(err)
 		}
 
+		// Play error_alert.mp3
 		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 		done := make(chan bool)
 		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
 			done <- true
 		})))
 		<-done
+	} else {
+		control.Start(&startingstate, &machine)
 	}
 }
