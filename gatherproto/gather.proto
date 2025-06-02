@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package gatherproto;
+
+option go_package = "./gather";
+
+service GatherService {
+    rpc EndServer (EndServerRequest) returns (EndServerResponse) {};
+    rpc SendMachineInfo (MachineInfoRequest) returns (MachineInfoResponse) {};
+    rpc SendStateInfo (StateInfoRequest) returns (StateInfoResponse) {};
+}
+
+message EndServerRequest {
+
+}
+
+message EndServerResponse {
+
+}
+
+message MachineInfoRequest {
+    string port = 1;
+    string ip = 2;
+    string window = 3;
+}
+
+message MachineInfoResponse {
+    bool success = 1;
+}
+
+message StateInfoRequest {
+    bool leader = 1;
+    bool allowtransfer = 2;
+    string addrstring = 3;
+}
+
+message StateInfoResponse {
+    bool success = 1;
+}
+
+// protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative ./gather.proto

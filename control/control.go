@@ -10,6 +10,7 @@ import (
 	gohook "github.com/robotn/gohook"
 
 	node "cs498.com/browsersync/node"
+	s "cs498.com/browsersync/structs"
 )
 
 var (
@@ -19,29 +20,15 @@ var (
 	rawcodedict map[uint16]string = map[uint16]string{
 		162: "l ctrl", 163: "r ctrl", 164: "l alt", 165: "r alt", 91: "win", 160: "l shift", 161: "r shift", 9: "tab", 13: "enter",
 		8: "backspace", 27: "esc", 32: "space"}
-	leader        bool
-	allowtransfer bool
-	addrstring    string
-	myport        string
-	myip          string
-	thewindow     string
 )
 
-func Start(leaderArg bool, allowtransferArg bool, addrstringArg string, myportArg string, myipArg string, thewindowArg string) {
-	leader = leaderArg
-	allowtransfer = allowtransferArg
-	addrstring = addrstringArg
-	myport = myportArg
-	myip = myipArg
-	thewindow = thewindowArg
-
-	addrs := strings.Split(addrstring, " ")
-	window = thewindow // So this is saying we ignore any inputs not in a window that has "main.go" somewhere in the title. Practically, I'd set this to "google chrome"
-	mynode := node.Start(leader, window)
-	go mynode.Run(addrs, myip, myport) // this is just starting up the node
+func Start(startingstate *s.StateInfo, machine *s.MachineInfo) {
+	mynode := node.Start(startingstate, machine)
+	go mynode.Run(startingstate, machine) // this is just starting up the node
 	log.Printf("Current PID: %d\n", rb.GetPid())
 
-	handleInputs(window, &mynode) // we now go into an infinite loop so that we can handle events as the come up
+	// We ignore any inputs not in a window that has "main.go" somewhere in the title. Practically, I'd set this to "google chrome"
+	handleInputs(startingstate, &mynode) // we now go into an infinite loop so that we can handle events as the come up
 
 }
 
@@ -53,7 +40,7 @@ func CheckRightWindow(window string) bool {
 }
 
 // This function loops infinitely waiting for keystrokes and mouse events from the user
-func handleInputs(window string, mynode *node.Node) {
+func handleInputs(startingstate *s.StateInfo, mynode *node.Node) {
 	// TODO: Find a way to ignore inputs from robotgo while paying attention to ones that are from the user
 	// If not possible, stick with leader design like we have here
 	// gohook.AddEvents("q", "ctrl", "shift")
@@ -63,7 +50,7 @@ func handleInputs(window string, mynode *node.Node) {
 		fmt.Println("You are not the leader")
 	}
 
-	if allowtransfer {
+	if startingstate.Allowtransfer {
 		fmt.Println("Anyone can become the leader by pressing f9")
 	}
 
@@ -74,7 +61,7 @@ func handleInputs(window string, mynode *node.Node) {
 
 		if !mynode.Leader && e.Rawcode != 120 {
 			continue
-		} else if !mynode.Leader && allowtransfer && e.Kind == gohook.KeyUp {
+		} else if !mynode.Leader && startingstate.Allowtransfer && e.Kind == gohook.KeyUp {
 			log.Println("BECOMING LEADER!!!")
 			log.Println(e)
 			mynode.Leader = true
@@ -88,7 +75,7 @@ func handleInputs(window string, mynode *node.Node) {
 			}
 			handleClicks(e, mynode)
 		} else if e.Kind == gohook.KeyDown {
-			if pressed[e.Rawcode] || !CheckRightWindow(window) || !leader {
+			if pressed[e.Rawcode] || !CheckRightWindow(window) || !mynode.Leader {
 				continue
 			}
 			pressed[e.Rawcode] = true
