@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ var (
 	stopchan      chan int
 	machine       s.MachineInfo
 	startingstate s.StateInfo
+	port          = "20601"
 )
 
 type GatherServer struct {
@@ -35,7 +37,16 @@ func Gather() (s.StateInfo, s.MachineInfo, error) {
 }
 
 func startListening() {
-	lis, err := net.Listen("tcp", "1616161:hi")
+	app := "tailscale"
+	arg0 := "ip"
+	cmd := exec.Command(app, arg0)
+	stdout, err := cmd.Output()
+	if err != nil {
+		log.Fatalf("failed to get tailscale ip: %v", err)
+	}
+	ip := strings.Split(string(stdout), "\n")[0]
+
+	lis, err := net.Listen("tcp", ip+":"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

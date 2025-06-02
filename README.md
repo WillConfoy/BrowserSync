@@ -13,3 +13,6 @@ In order to compile, you will need the following.
 - GCC
 
 In order to get GCC on windows you'll need to download and install MinGW64, or find some alternative method. Regardless of how you get it, you will need it. Without gcc, golang will complain about unknown values in the dependencies and fail to build the executable.
+
+#### HOW TO USE ####
+There are two ways to use this. Either set the manual arg and use all of the command line args to set up all of the state, such as the leader and the list of ip:port separated by spaces. Alternatively, run the executable argumentless and run the docker container, making sure that you set the proper auth key for your tailnet in the docker compose file. This will create a website that everyone on your tailnet can visit. By joining the proper lobby, the backend of the website will be able to give your browsersync instance all of the state that it needs. Make sure that port 20601 is not in use, because BrowserSync needs to be using it.

@@ -40,7 +40,7 @@ func main() {
 		}
 	}
 
-	if err == nil {
+	if err != nil {
 		log.Println("Error getting state! Please speak up and tell the others in the session!")
 
 		// Get path to executable
