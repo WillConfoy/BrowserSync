@@ -1,9 +1,9 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -25,6 +25,9 @@ var (
 	thewindow     = flag.String("w", "google chrome", "Part of the name of the window ex: google chrome")
 )
 
+//go:embed alerts
+var alertsFS embed.FS
+
 func main() {
 	flag.Parse()
 	var startingstate s.StateInfo
@@ -40,17 +43,10 @@ func main() {
 		}
 	}
 
-	if err != nil {
+	if err == nil {
 		log.Println("Error getting state! Please speak up and tell the others in the session!")
 
-		// Get path to executable
-		executablePath, _ := os.Executable()
-		executablePath = strings.ReplaceAll(executablePath, "\\", "/")
-		executablePath = executablePath[:strings.LastIndex(executablePath, "/")]
-
-		// Open error_alert.mp3 using absolute path
-		relpath := "/alerts/error_alert.mp3"
-		f, err := os.Open(executablePath + relpath)
+		f, err := alertsFS.Open("alerts/error_alert.mp3")
 		if err != nil {
 			log.Fatal(err)
 		}
