@@ -43,6 +43,7 @@ func main() {
 		}
 	}
 
+	// make sure to change this before actually using this code bc right now it does error always
 	if err == nil {
 		log.Println("Error getting state! Please speak up and tell the others in the session!")
 
