@@ -1,1 +1,59 @@
-# TODO: Use the flask folder to make a docker image and figure everything out
+services:
+  browsersync-ts:
+    image: tailscale/tailscale:latest
+    container_name: bsync-ts
+    hostname: browsersync
+    environment:
+      - TS_AUTHKEY=/run/secrets/ts_authkey_secret
+      # - TS_SERVE_CONFIG=/config/bsync.json
+      - TS_EXTRA_ARGS=--snat-subnet-routes=false
+      - TS_STATE_DIR=/var/lib/tailscale
+      # - TS_USERSPACE=false
+    volumes:
+      - ${PWD}/ts-authkey-test/state:/var/lib/tailscale
+    # devices:
+      # - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: no
+
+  flaskapp:
+    build:
+      context: ./flask
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - browsersync-ts
+    environment:
+      - FLASK_ENV=development    # Enables debug mode
+      - FLASK_DEBUG=1            # Explicitly enable debug
+      - FLASK_RUN_HOST=0.0.0.0
+      - SECRET_KEY=/run/secrets/flask_secret_key
+    network_mode: service:browsersync-ts
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sys
+      POSTGRES_DB: postgres
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    network_mode: service:browsersync-ts
+  
+  nginx-ts:
+    image: nginx
+    network_mode: service:browsersync-ts
+
+volumes:
+  pgdata:
+  browsersync-ts:
+    driver: local
+
+secrets:
+  ts_authkey:
+    file: ./ts_authkey_secret
+  flask_secret:
+    file: ./flask_secret_key

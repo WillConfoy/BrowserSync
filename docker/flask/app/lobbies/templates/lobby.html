@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lobby - {{ lobby_id }}</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-EABs6jChweJ1ofNjJrZ7r1/4A8lgYqg1cRI0sEwGHaK6fW0zFVv58Xo5bEvN5RvR" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f6fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 30px;
+        }
+
+        .button-container {
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #messages {
+            width: 80%;
+            max-width: 800px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lobby ID: {{ lobby_id }}</h1>
+
+    <div class="button-container">
+        <button onclick="leaveLobby()">Leave Lobby</button>
+        {% if is_owner %}
+            <button onclick="startLobby()">Start Lobby</button>
+        {% endif %}
+    </div>
+
+    <div id="messages"></div>
+
+    <div id="participants-section" style="margin-bottom: 20px;">
+        <h3>Participants</h3>
+        <ul id="participants"></ul>
+    </div>
+
+    <div id="leader-transfer-setting" style="margin-bottom: 20px;">
+        <h3>Settings</h3>
+        {% if is_owner %}
+            <label>
+                <input type="checkbox" id="allow-transfer-checkbox">
+                Allow leader transfer
+            </label>
+        {% else %}
+            <span id="allow-transfer-label">Allow leader transfer: ...</span>
+        {% endif %}
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        var isOwner = JSON.parse('{{ is_owner | tojson }}');
+
+        // Automatically join the lobby on page load
+        socket.emit("join");
+
+        function leaveLobby() {
+            socket.emit("leave lobby");
+        }
+
+        function startLobby() {
+            socket.emit("start lobby");
+        }
+
+        if (isOwner) {
+            const checkbox = document.getElementById("allow-transfer-checkbox");
+            checkbox.addEventListener("change", function () {
+                socket.emit("allow_transfer_changed", checkbox.checked);
+            });
+        }
+
+        // Listen for messages from the server
+        socket.on("message", function(msg) {
+            const messagesDiv = document.getElementById("messages");
+            const messageElem = document.createElement("div");
+            messageElem.classList.add("message");
+            messageElem.textContent = msg;
+            messagesDiv.appendChild(messageElem);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+
+        // Update participant list when received from server
+        socket.on("participants", function(userIds) {
+            const participantsList = document.getElementById("participants");
+            participantsList.innerHTML = ""; // Clear list
+
+            userIds.forEach(userId => {
+                const li = document.createElement("li");
+                li.textContent = userId;
+                participantsList.appendChild(li);
+            });
+        });
+
+        socket.on("left", function() {
+            window.location.href = "{{ url_for('dashboard.dashboard') }}";
+        });
+
+        socket.on("allow_transfer_update", function(isAllowed) {
+            if (isOwner) {
+                document.getElementById("allow-transfer-checkbox").checked = isAllowed;
+            } else {
+                document.getElementById("allow-transfer-label").textContent = "Allow leader transfer: " + (isAllowed ? "On" : "Off");
+            }
+        });
+
+
+    </script>
+</body>
+</html>
