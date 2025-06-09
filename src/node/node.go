@@ -164,7 +164,7 @@ func (node *Node) DoHeartbeat() {
 	for {
 		time.Sleep(time.Second)
 		node.BroadcastHeartbeat()
-		log.Println(node.Peers)
+		// log.Println(node.Peers)
 	}
 }
 
@@ -176,7 +176,7 @@ func (node *Node) BroadcastHeartbeat() {
 		if err != nil {
 			log.Printf("HEARTBEAT TO %s FAILED\n", ip)
 		} else if r.GetRet() == node.myaddr {
-			log.Printf("GOT HEARTBEAT FROM: %s\n", ip)
+			// log.Printf("GOT HEARTBEAT FROM: %s\n", ip)
 		} else {
 			log.Fatalf("SOMETHING WENT WRONG AND %s RESPONDED WITH %s INSTEAD OF %s\n", ip, r.GetRet(), node.myaddr)
 		}
@@ -241,7 +241,7 @@ func (node *Node) SendCommand(keys string) {
 		if err != nil {
 			log.Printf("FAILED SENDING %s KEY TO %s\n", keys, ip)
 		} else {
-			log.Printf("Sent Key: %s to %s: %t\n", keys, ip, response.GetSuccess())
+			log.Printf("Sent COMMAND Keys: %s to %s: %t\n", keys, ip, response.GetSuccess())
 		}
 	}
 }
@@ -264,14 +264,14 @@ func (node *Node) SendKeyUp(key string) {
 // Sends a signal to every peer to scroll a certain direction
 func (node *Node) SendScroll(direction string) {
 	for ip, client := range node.Peers {
-		response, err := client.SendScrollInternal(context.Background(), &rs.ScrollRequest{
+		_, err := client.SendScrollInternal(context.Background(), &rs.ScrollRequest{
 			Direction: direction,
 		})
 
 		if err != nil {
 			log.Printf("FAILED SENDING '%s' SCROLL TO %s\n", direction, ip)
 		} else {
-			log.Printf("Sent Scroll: '%s' to %s: %t\n", direction, ip, response.GetSuccess())
+			// log.Printf("Sent Scroll: '%s' to %s: %t\n", direction, ip, response.GetSuccess())
 		}
 	}
 }

@@ -129,6 +129,7 @@ func handleKeydown(e gohook.Event, mynode *node.Node) {
 
 // Get all held keys and send them all at once
 func handleCommand(e gohook.Event, mynode *node.Node) bool {
+	log.Println("GONNA TRY SENDING A COMMAND!!!")
 	delim_string := ""
 	// construct delimited string of all pressed keys
 	for key, b := range pressed {
@@ -147,6 +148,8 @@ func handleCommand(e gohook.Event, mynode *node.Node) bool {
 		return false
 	}
 
+	log.Println("DELIMITED STRING OF HELD KEYS IS: " + delim_string)
+
 	r, is_in := rawcodedict[e.Rawcode]
 	if is_in {
 		delim_string += r
@@ -155,7 +158,8 @@ func handleCommand(e gohook.Event, mynode *node.Node) bool {
 		delim_string += string(gohook.RawcodetoKeychar(e.Rawcode))
 	}
 
-	log.Printf("Key command: %s \n", delim_string)
+	log.Println("FINAL DELIMITED STRING IS: " + delim_string)
+	// log.Printf("Key command: %s \n", delim_string)
 	sb.WriteString(delim_string)
 	mynode.SendCommand(delim_string)
 
