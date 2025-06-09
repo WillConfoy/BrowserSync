@@ -68,7 +68,17 @@ def handle_start():
     addrstring = ""
 
     for machine in lobby["participants"]:
-        addrstring += machine["host"]+"|"
+        user = User.query.get_or_404(machine["user_id"])
+        if not user:
+            print("ERROR GETTING USER!!!!")
+            continue
+
+        user_settings = Settings.query.filter_by(user_id=machine["user_id"]).first()
+        settings = {"port":"50051", "window":"firefox"}
+        if user_settings:
+            settings = json.loads(user_settings.settings_json)
+
+        addrstring += machine["host"]+":"+settings["port"]+"|"
     addrstring = addrstring[:-1]
 
     for machine in lobby["participants"]:
