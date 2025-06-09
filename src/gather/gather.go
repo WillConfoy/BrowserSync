@@ -50,6 +50,7 @@ func startListening() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	stopchan = make(chan int, 10)
 
 	grpcServer := grpc.NewServer() // n is for serving purpose
 	myserver := &GatherServer{}
