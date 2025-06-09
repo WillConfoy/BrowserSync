@@ -18,7 +18,7 @@ var (
 	sb          strings.Builder
 	pressed     map[uint16]bool   = make(map[uint16]bool)
 	rawcodedict map[uint16]string = map[uint16]string{
-		162: "l ctrl", 163: "r ctrl", 164: "l alt", 165: "r alt", 91: "win", 160: "l shift", 161: "r shift", 9: "tab", 13: "enter",
+		162: "lctrl", 163: "rctrl", 164: "lalt", 165: "ralt", 91: "win", 160: "lshift", 161: "rshift", 9: "tab", 13: "enter",
 		8: "backspace", 27: "esc", 32: "space"}
 )
 
