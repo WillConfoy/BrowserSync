@@ -80,9 +80,9 @@ func handleInputs(startingstate *s.StateInfo, mynode *node.Node) {
 			}
 			pressed[e.Rawcode] = true
 
-			if !handleCommand(e, mynode) {
-				handleKeydown(e, mynode)
-			}
+			// if !handleCommand(e, mynode) {
+			handleKeydown(e, mynode)
+			// }
 		} else if e.Kind == gohook.KeyHold {
 			log.Println(e)
 			if pressed[e.Rawcode] || !CheckRightWindow(window) {
@@ -90,7 +90,10 @@ func handleInputs(startingstate *s.StateInfo, mynode *node.Node) {
 			}
 
 			pressed[e.Rawcode] = true
-			handleKeyholds(e, mynode)
+			if !handleCommand(e, mynode) {
+				// handleKeydown(e, mynode)
+				handleKeyholds(e, mynode)
+			}
 
 		} else if e.Kind == gohook.KeyUp {
 			if !CheckRightWindow(window) {
