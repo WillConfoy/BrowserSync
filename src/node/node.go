@@ -315,6 +315,7 @@ func (node *Node) SendCommandInternal(ctx context.Context, in *rs.CommandRequest
 	if CheckRightWindow(node.Window) {
 		keys := strings.Split(in.GetCommand(), "|")
 		rgo.KeyTap(keys[0], keys[1:])
+		log.Println("GOT COMMAND!!! TRYING TO PRESS THE KEYS " + strings.Join(keys, ","))
 		return &rs.CommandResponse{Success: true}, nil
 	} else {
 		log.Printf("Not in right window- current window: %s, desired string: %s\n", strings.ToLower(rgo.GetTitle()), node.Window)

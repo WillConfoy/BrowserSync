@@ -151,16 +151,6 @@ func handleCommand(e gohook.Event, mynode *node.Node) bool {
 		return false
 	}
 
-	log.Println("DELIMITED STRING OF HELD KEYS IS: " + delim_string)
-
-	r, is_in := rawcodedict[e.Rawcode]
-	if is_in {
-		delim_string += r
-		mynode.SendKeyDown(r)
-	} else {
-		delim_string += string(gohook.RawcodetoKeychar(e.Rawcode))
-	}
-
 	log.Println("FINAL DELIMITED STRING IS: " + delim_string)
 	// log.Printf("Key command: %s \n", delim_string)
 	sb.WriteString(delim_string)
