@@ -74,7 +74,7 @@ func checkState() bool {
 
 func (gather *GatherServer) EndServer(ctx context.Context, in *gs.EndServerRequest) (*gs.EndServerResponse, error) {
 	stopchan <- 1
-	return &gs.EndServerResponse{}, nil
+	return &gs.EndServerResponse{Success: true}, nil
 }
 
 func (gather *GatherServer) SendMachineInfo(ctx context.Context, in *gs.MachineInfoRequest) (*gs.MachineInfoResponse, error) {

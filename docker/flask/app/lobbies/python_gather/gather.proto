@@ -15,7 +15,7 @@ message EndServerRequest {
 }
 
 message EndServerResponse {
-
+    bool success = 1;
 }
 
 message MachineInfoRequest {

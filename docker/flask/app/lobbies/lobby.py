@@ -1,4 +1,4 @@
-from flask import  render_template, request, redirect, url_for, session, flash
+from flask import  render_template, request, redirect, url_for, session, flash, current_app
 from flask_socketio import leave_room, join_room, emit, send
 import grpc, json
 from .. import lobbies, socketio, mutex, db
@@ -72,6 +72,7 @@ def handle_start():
     addrstring = addrstring[:-1]
 
     for machine in lobby["participants"]:
+        current_app.logger.info(f"Now sending to {machine["host"]}")
         user = User.query.get_or_404(machine["user_id"])
         if not user:
             print("ERROR GETTING USER!!!!")
@@ -85,14 +86,28 @@ def handle_start():
         is_owner = lobby["owner"]["owner_id"] == machine["user_id"]
         with grpc.insecure_channel(machine["host"]+':20601') as channel:
             stub = gather_pb2_grpc.GatherServiceStub(channel)
+
             machineInfoRequest = gather_pb2.MachineInfoRequest(port=settings["port"], ip=machine["host"], window=settings["window"])
             response = stub.SendMachineInfo(machineInfoRequest)
             if not response.success:
-                print(f"FAILED SENDING MACHINE INFO TO {machine}")
+                current_app.logger.info(f"FAILED SENDING MACHINE INFO TO {machine}")
+            else:
+                current_app.logger.info(f"Success sending machine info to: {machine["host"]}")
+
             stateInfoRequest = gather_pb2.StateInfoRequest(leader=is_owner, allowtransfer=allowTransfer, addrstring=addrstring)
             response = stub.SendStateInfo(stateInfoRequest)
             if not response.success:
-                print(f"FAILED SENDING STATE INFO TO {machine}")
+                current_app.logger.info(f"FAILED SENDING STATE INFO TO {machine}")
+            else:
+                current_app.logger.info(f"Success sending state info to: {machine["host"]}")
+            
+            endserver = gather_pb2.EndServerRequest()
+            response = stub.EndServer(endserver)
+            if not response.success:
+                current_app.logger.info(f"FAILED SENDING SHUTDOWN TO {machine}")
+            else:
+                current_app.logger.info(f"Success sending shutdown to: {machine["host"]}")
+
 
 @socketio.on("leave lobby")
 def handle_leave():
