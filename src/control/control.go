@@ -79,7 +79,10 @@ func handleInputs(startingstate *s.StateInfo, mynode *node.Node) {
 				continue
 			}
 			pressed[e.Rawcode] = true
-			handleKeydown(e, mynode)
+
+			if !handleCommand(e, mynode) {
+				handleKeydown(e, mynode)
+			}
 		} else if e.Kind == gohook.KeyHold {
 			log.Println(e)
 			if pressed[e.Rawcode] || !CheckRightWindow(window) {
@@ -122,6 +125,41 @@ func handleKeydown(e gohook.Event, mynode *node.Node) {
 
 	sb.WriteString(string(e.Keychar))
 	log.Printf("Pressed key down: %s\n", string(e.Keychar))
+}
+
+// Get all held keys and send them all at once
+func handleCommand(e gohook.Event, mynode *node.Node) bool {
+	delim_string := ""
+	// construct delimited string of all pressed keys
+	for key, b := range pressed {
+		if b {
+			r, is_in := rawcodedict[key]
+
+			if is_in {
+				delim_string += (r + "|")
+			} else {
+				delim_string += string(gohook.RawcodetoKeychar(e.Rawcode)) + "|"
+			}
+		}
+	}
+
+	if len(delim_string) == 0 {
+		return false
+	}
+
+	r, is_in := rawcodedict[e.Rawcode]
+	if is_in {
+		delim_string += r
+		mynode.SendKeyDown(r)
+	} else {
+		delim_string += string(gohook.RawcodetoKeychar(e.Rawcode))
+	}
+
+	log.Printf("Key command: %s \n", delim_string)
+	sb.WriteString(delim_string)
+	mynode.SendCommand(delim_string)
+
+	return true
 }
 
 func handleKeyholds(e gohook.Event, mynode *node.Node) {

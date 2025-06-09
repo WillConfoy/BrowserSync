@@ -232,6 +232,20 @@ func (node *Node) SendKeyDown(key string) {
 	}
 }
 
+func (node *Node) SendCommand(keys string) {
+	for ip, client := range node.Peers {
+		response, err := client.SendKeyUpInternal(context.Background(), &rs.KeyUpRequest{
+			Key: keys,
+		})
+
+		if err != nil {
+			log.Printf("FAILED SENDING %s KEY TO %s\n", keys, ip)
+		} else {
+			log.Printf("Sent Key: %s to %s: %t\n", keys, ip, response.GetSuccess())
+		}
+	}
+}
+
 // Sends a signal to release a key to every peer
 func (node *Node) SendKeyUp(key string) {
 	for ip, client := range node.Peers {
@@ -294,6 +308,17 @@ func (node *Node) SendKeyDownInternal(ctx context.Context, in *rs.KeyDownRequest
 	} else {
 		log.Printf("Not in right window- current window: %s, desired string: %s\n", strings.ToLower(rgo.GetTitle()), node.Window)
 		return &rs.KeyDownResponse{Success: false}, nil
+	}
+}
+
+func (node *Node) SendCommandInternal(ctx context.Context, in *rs.CommandRequest) (*rs.CommandResponse, error) {
+	if CheckRightWindow(node.Window) {
+		keys := strings.Split(in.GetCommand(), "|")
+		rgo.KeyTap(keys[0], keys[1:])
+		return &rs.CommandResponse{Success: true}, nil
+	} else {
+		log.Printf("Not in right window- current window: %s, desired string: %s\n", strings.ToLower(rgo.GetTitle()), node.Window)
+		return &rs.CommandResponse{Success: false}, nil
 	}
 }
 

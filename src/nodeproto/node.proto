@@ -7,6 +7,7 @@ option go_package = "./node";
 service SyncService {
     rpc SendClickInternal (ClickRequest) returns (ClickResponse) {};
     rpc SendKeyDownInternal (KeyDownRequest) returns (KeyDownResponse) {};
+    rpc SendCommandInternal (CommandRequest) returns (CommandResponse) {};
     rpc SendKeyUpInternal (KeyUpRequest) returns (KeyUpResponse) {};
     rpc HeartbeatInternal (HeartbeatRequest) returns (HeartbeatResponse) {};
     rpc SendScrollInternal (ScrollRequest) returns (ScrollResponse) {};
@@ -62,8 +63,16 @@ message LeaderRequest {
     string ip = 1;
 }
 
-message LeaderResponse{
+message LeaderResponse {
 
+}
+
+message CommandRequest {
+    string command = 1;
+}
+
+message CommandResponse {
+    bool success = 1;
 }
 
 
