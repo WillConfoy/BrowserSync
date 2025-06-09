@@ -234,8 +234,8 @@ func (node *Node) SendKeyDown(key string) {
 
 func (node *Node) SendCommand(keys string) {
 	for ip, client := range node.Peers {
-		response, err := client.SendKeyUpInternal(context.Background(), &rs.KeyUpRequest{
-			Key: keys,
+		response, err := client.SendCommandInternal(context.Background(), &rs.CommandRequest{
+			Command: keys,
 		})
 
 		if err != nil {

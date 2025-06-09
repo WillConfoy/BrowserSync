@@ -151,6 +151,8 @@ func handleCommand(e gohook.Event, mynode *node.Node) bool {
 		return false
 	}
 
+	delim_string = delim_string[:len(delim_string)-1]
+
 	log.Println("FINAL DELIMITED STRING IS: " + delim_string)
 	// log.Printf("Key command: %s \n", delim_string)
 	sb.WriteString(delim_string)
