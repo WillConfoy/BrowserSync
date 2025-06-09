@@ -19,7 +19,7 @@ var (
 	pressed     map[uint16]bool   = make(map[uint16]bool)
 	rawcodedict map[uint16]string = map[uint16]string{
 		162: "lctrl", 163: "rctrl", 164: "lalt", 165: "ralt", 91: "win", 160: "lshift", 161: "rshift", 9: "tab", 13: "enter",
-		8: "backspace", 27: "esc", 32: "space"}
+		8: "backspace", 20: "capslock", 27: "esc", 32: "space", 37: "left", 38: "up", 39: "right", 40: "down"}
 )
 
 func Start(startingstate *s.StateInfo, machine *s.MachineInfo) {
