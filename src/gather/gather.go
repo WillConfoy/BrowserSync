@@ -59,7 +59,7 @@ func startListening() {
 	go func() {
 		<-stopchan
 		time.Sleep(1 * time.Second)
-		grpcServer.GracefulStop()
+		grpcServer.Stop()
 	}()
 
 	// start listening
