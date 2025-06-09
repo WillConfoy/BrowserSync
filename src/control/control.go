@@ -140,9 +140,9 @@ func handleCommand(e gohook.Event, mynode *node.Node) bool {
 			r, is_in := rawcodedict[key]
 
 			if is_in {
-				delim_string += (r + "|")
+				delim_string = delim_string + (r + "|")
 			} else {
-				delim_string += string(gohook.RawcodetoKeychar(e.Rawcode)) + "|"
+				delim_string = string(gohook.RawcodetoKeychar(e.Rawcode)) + "|" + delim_string
 			}
 		}
 	}
