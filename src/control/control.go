@@ -39,6 +39,11 @@ func CheckRightWindow(window string) bool {
 	return strings.Contains(active, window)
 }
 
+func CheckRightDisplay(e gohook.Event, rect *rb.Rect) bool {
+	x, y := int(e.X), int(e.Y)
+	return rect.X <= x && x <= rect.X+rect.W && rect.Y <= y && y <= rect.Y+rect.H
+}
+
 // This function loops infinitely waiting for keystrokes and mouse events from the user
 func handleInputs(startingstate *s.StateInfo, mynode *node.Node) {
 	// TODO: Find a way to ignore inputs from robotgo while paying attention to ones that are from the user
@@ -70,7 +75,7 @@ func handleInputs(startingstate *s.StateInfo, mynode *node.Node) {
 		}
 
 		if e.Kind == gohook.MouseDown {
-			if !CheckRightWindow(window) {
+			if !CheckRightWindow(window) || !CheckRightDisplay(e, &mynode.DisplayRect) {
 				continue
 			}
 			handleClicks(e, mynode)
@@ -80,9 +85,7 @@ func handleInputs(startingstate *s.StateInfo, mynode *node.Node) {
 			}
 			pressed[e.Rawcode] = true
 
-			// if !handleCommand(e, mynode) {
 			handleKeydown(e, mynode)
-			// }
 		} else if e.Kind == gohook.KeyHold {
 			log.Println(e)
 			if pressed[e.Rawcode] || !CheckRightWindow(window) {
@@ -90,9 +93,10 @@ func handleInputs(startingstate *s.StateInfo, mynode *node.Node) {
 			}
 
 			pressed[e.Rawcode] = true
-			if !handleCommand(e, mynode) {
-				// handleKeydown(e, mynode)
+			if len(pressed) == 1 {
 				handleKeyholds(e, mynode)
+			} else {
+				handleCommand(e, mynode)
 			}
 
 		} else if e.Kind == gohook.KeyUp {
@@ -131,7 +135,7 @@ func handleKeydown(e gohook.Event, mynode *node.Node) {
 }
 
 // Get all held keys and send them all at once
-func handleCommand(e gohook.Event, mynode *node.Node) bool {
+func handleCommand(e gohook.Event, mynode *node.Node) {
 	log.Println("GONNA TRY SENDING A COMMAND!!!")
 	delim_string := ""
 	// construct delimited string of all pressed keys
@@ -147,18 +151,12 @@ func handleCommand(e gohook.Event, mynode *node.Node) bool {
 		}
 	}
 
-	if len(delim_string) == 0 {
-		return false
-	}
-
 	delim_string = delim_string[:len(delim_string)-1]
 
 	log.Println("FINAL DELIMITED STRING IS: " + delim_string)
 	// log.Printf("Key command: %s \n", delim_string)
 	sb.WriteString(delim_string)
 	mynode.SendCommand(delim_string)
-
-	return true
 }
 
 func handleKeyholds(e gohook.Event, mynode *node.Node) {

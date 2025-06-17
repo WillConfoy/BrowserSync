@@ -28,7 +28,7 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    default_settings = json.dumps({"port":"50051", "window":"chrome", "host":username})
+    default_settings = json.dumps({"port":"50051", "window":"chrome", "host":username, "display":"1"})
     user_settings = Settings(user_id=user.id, settings_json=default_settings)
 
     db.session.add(user_settings)

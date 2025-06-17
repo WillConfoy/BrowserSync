@@ -37,7 +37,7 @@ type Node struct {
 	Peers         map[string]rs.SyncServiceClient
 	myaddr        string
 	rs.UnimplementedSyncServiceServer
-	displayRect rgo.Rect
+	DisplayRect rgo.Rect
 	Window      string
 }
 
@@ -49,7 +49,7 @@ func Start(startingstate *s.StateInfo, machine *s.MachineInfo) Node {
 	rect := rgo.GetDisplayRect(machine.Displaynum)
 	// mynode := Node{Leader: leader, maxX: rgo.GetScreenRect().W, maxY: rgo.GetScreenRect().H, Window: window}
 
-	mynode := Node{Leader: startingstate.Leader, displayRect: rect, Window: machine.Window}
+	mynode := Node{Leader: startingstate.Leader, DisplayRect: rect, Window: machine.Window}
 	return mynode
 }
 
@@ -155,14 +155,15 @@ func CheckRightWindow(window string) bool {
 	return strings.Contains(active, window)
 }
 
-// This is just a test function to make sure the node exists and it kind of outdated
-func (node *Node) PrintStuff() {
-	log.Println("I am printing stuff")
-}
-
-func percentXY(x int, y int, rect *rgo.Rect) (xp, yp float64) {
+func pointToPercent(x int, y int, rect *rgo.Rect) (xp, yp float64) {
 	xp = float64(x) / float64(rect.W)
 	yp = float64(y) / float64(rect.H)
+	return
+}
+
+func percentToPoint(xp, yp float64, rect *rgo.Rect) (x, y int) {
+	x = int(xp*float64(rect.W)) + rect.X
+	y = int(yp*float64(rect.H)) + rect.Y
 	return
 }
 
@@ -197,7 +198,7 @@ func (node *Node) BroadcastNewLeader() {
 // Sends a signal to click a mouse button to every peer
 func (node *Node) SendClick(button int, x int, y int) {
 	buttonString := buttonmap[button]
-	newX, newY := percentXY(x, y, &node.displayRect)
+	newX, newY := pointToPercent(x, y, &node.DisplayRect)
 
 	for ip, client := range node.Peers {
 		response, err := client.SendClickInternal(context.Background(), &rs.ClickRequest{
@@ -302,20 +303,17 @@ func (node *Node) HeartbeatInternal(ctx context.Context, in *rs.HeartbeatRequest
 	return &rs.HeartbeatResponse{Ret: in.GetBeat()}, nil
 }
 
-// func (node *Node) SendClickInternal(ctx context.Context, in *rs.ClickRequest) (*rs.ClickResponse, error) {
-// 	x, y := rgo.GetScreenSize()
-// 	log.Printf("Max X: %d, Max Y: %d, Percent X: %f, Percent Y: %f", node.maxX, node.maxY, in.GetXPercent(), in.GetYPercent())
-// 	log.Printf("New Max X: %d, New Max Y: %d", x, y)
-// 	if CheckRightWindow(node.Window) {
-// 		newX := int(in.GetXPercent() * float64(node.maxX))
-// 		newY := int(in.GetYPercent() * float64(node.maxY))
-// 		rgo.MoveClick(newX, newY, in.GetButton())
-// 		return &rs.ClickResponse{Success: true}, nil
-// 	} else {
-// 		log.Printf("Not in right window- current window: %s, desired string: %s\n", strings.ToLower(rgo.GetTitle()), node.Window)
-// 		return &rs.ClickResponse{Success: false}, nil
-// 	}
-// }
+func (node *Node) SendClickInternal(ctx context.Context, in *rs.ClickRequest) (*rs.ClickResponse, error) {
+	log.Printf("Max X: %d, Max Y: %d, Percent X: %f, Percent Y: %f", node.DisplayRect.W, node.DisplayRect.H, in.GetXPercent(), in.GetYPercent())
+	if CheckRightWindow(node.Window) {
+		x, y := percentToPoint(in.GetXPercent(), in.GetYPercent(), &node.DisplayRect)
+		rgo.MoveClick(x, y, in.GetButton())
+		return &rs.ClickResponse{Success: true}, nil
+	} else {
+		log.Printf("Not in right window- current window: %s, desired string: %s\n", strings.ToLower(rgo.GetTitle()), node.Window)
+		return &rs.ClickResponse{Success: false}, nil
+	}
+}
 
 func (node *Node) SendKeyDownInternal(ctx context.Context, in *rs.KeyDownRequest) (*rs.KeyDownResponse, error) {
 	if CheckRightWindow(node.Window) {

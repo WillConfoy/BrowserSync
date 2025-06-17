@@ -26,10 +26,11 @@ services:
       - browsersync-ts
     environment:
       - FLASK_ENV=development    # Enables debug mode
-      - FLASK_DEBUG=1            # Explicitly enable debug
       - FLASK_RUN_HOST=0.0.0.0
-      - SECRET_KEY=/run/secrets/flask_secret_key
+      - FLASK_SECRET_KEY=/run/secrets/flask_secret_key
     network_mode: service:browsersync-ts
+    secrets:
+      - flask_secret
 
   db:
     image: postgres:17-alpine

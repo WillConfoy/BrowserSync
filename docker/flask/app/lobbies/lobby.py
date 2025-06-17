@@ -97,7 +97,7 @@ def handle_start():
         with grpc.insecure_channel(machine["host"]+':20601') as channel:
             stub = gather_pb2_grpc.GatherServiceStub(channel)
 
-            machineInfoRequest = gather_pb2.MachineInfoRequest(port=settings["port"], ip=machine["host"], window=settings["window"])
+            machineInfoRequest = gather_pb2.MachineInfoRequest(port=settings["port"], ip=machine["host"], window=settings["window"], display=int(settings["display"])-1)
             response = stub.SendMachineInfo(machineInfoRequest)
             if not response.success:
                 current_app.logger.info(f"FAILED SENDING MACHINE INFO TO {machine}")

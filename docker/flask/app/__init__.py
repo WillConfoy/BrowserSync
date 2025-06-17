@@ -1,4 +1,5 @@
 import threading
+import os
 from flask import Flask
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
@@ -13,7 +14,7 @@ def create_app(debug=False):
     """Create an application."""
     app = Flask(__name__)
     app.debug = debug
-    app.config['SECRET_KEY'] = 'NTAyNDE0Njc1OTUxMjUyNDU3Mjg2NDk4Mjc3OTU2ODgwNTExzE2OTg5MzY3NjQ0MDI5Mzc0MDY3Nzk1MjgzNDcxNzYxODE3Ng=='
+    app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY")
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:sys@localhost:5432/postgres'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     # app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)

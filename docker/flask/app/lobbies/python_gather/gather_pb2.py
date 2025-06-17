@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1apython_gather/gather.proto\x12\x0bgatherproto\"\x12\n\x10\x45ndServerRequest\"$\n\x11\x45ndServerResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\">\n\x12MachineInfoRequest\x12\x0c\n\x04port\x18\x01 \x01(\t\x12\n\n\x02ip\x18\x02 \x01(\t\x12\x0e\n\x06window\x18\x03 \x01(\t\"&\n\x13MachineInfoResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"M\n\x10StateInfoRequest\x12\x0e\n\x06leader\x18\x01 \x01(\x08\x12\x15\n\rallowtransfer\x18\x02 \x01(\x08\x12\x12\n\naddrstring\x18\x03 \x01(\t\"$\n\x11StateInfoResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x87\x02\n\rGatherService\x12L\n\tEndServer\x12\x1d.gatherproto.EndServerRequest\x1a\x1e.gatherproto.EndServerResponse\"\x00\x12V\n\x0fSendMachineInfo\x12\x1f.gatherproto.MachineInfoRequest\x1a .gatherproto.MachineInfoResponse\"\x00\x12P\n\rSendStateInfo\x12\x1d.gatherproto.StateInfoRequest\x1a\x1e.gatherproto.StateInfoResponse\"\x00\x42\nZ\x08./gatherb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1apython_gather/gather.proto\x12\x0bgatherproto\"\x12\n\x10\x45ndServerRequest\"$\n\x11\x45ndServerResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"O\n\x12MachineInfoRequest\x12\x0c\n\x04port\x18\x01 \x01(\t\x12\n\n\x02ip\x18\x02 \x01(\t\x12\x0e\n\x06window\x18\x03 \x01(\t\x12\x0f\n\x07\x64isplay\x18\x04 \x01(\x05\"&\n\x13MachineInfoResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"M\n\x10StateInfoRequest\x12\x0e\n\x06leader\x18\x01 \x01(\x08\x12\x15\n\rallowtransfer\x18\x02 \x01(\x08\x12\x12\n\naddrstring\x18\x03 \x01(\t\"$\n\x11StateInfoResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x87\x02\n\rGatherService\x12L\n\tEndServer\x12\x1d.gatherproto.EndServerRequest\x1a\x1e.gatherproto.EndServerResponse\"\x00\x12V\n\x0fSendMachineInfo\x12\x1f.gatherproto.MachineInfoRequest\x1a .gatherproto.MachineInfoResponse\"\x00\x12P\n\rSendStateInfo\x12\x1d.gatherproto.StateInfoRequest\x1a\x1e.gatherproto.StateInfoResponse\"\x00\x42\nZ\x08./gatherb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -37,13 +37,13 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_ENDSERVERRESPONSE']._serialized_start=63
   _globals['_ENDSERVERRESPONSE']._serialized_end=99
   _globals['_MACHINEINFOREQUEST']._serialized_start=101
-  _globals['_MACHINEINFOREQUEST']._serialized_end=163
-  _globals['_MACHINEINFORESPONSE']._serialized_start=165
-  _globals['_MACHINEINFORESPONSE']._serialized_end=203
-  _globals['_STATEINFOREQUEST']._serialized_start=205
-  _globals['_STATEINFOREQUEST']._serialized_end=282
-  _globals['_STATEINFORESPONSE']._serialized_start=284
-  _globals['_STATEINFORESPONSE']._serialized_end=320
-  _globals['_GATHERSERVICE']._serialized_start=323
-  _globals['_GATHERSERVICE']._serialized_end=586
+  _globals['_MACHINEINFOREQUEST']._serialized_end=180
+  _globals['_MACHINEINFORESPONSE']._serialized_start=182
+  _globals['_MACHINEINFORESPONSE']._serialized_end=220
+  _globals['_STATEINFOREQUEST']._serialized_start=222
+  _globals['_STATEINFOREQUEST']._serialized_end=299
+  _globals['_STATEINFORESPONSE']._serialized_start=301
+  _globals['_STATEINFORESPONSE']._serialized_end=337
+  _globals['_GATHERSERVICE']._serialized_start=340
+  _globals['_GATHERSERVICE']._serialized_end=603
 # @@protoc_insertion_point(module_scope)
