@@ -26,12 +26,6 @@ import (
 )
 
 var (
-	// sb strings.Builder
-	// counter int = 0
-	// pressed map[uint16]bool = make(map[uint16]bool)
-	// rawcodedict map[uint16]string = map[uint16]string{
-	//     162:"l ctrl", 163:"r ctrl", 164:"l alt", 165:"r alt", 91:"win", 160:"l shift", 161:"r shift", 9:"tab", 13:"enter",
-	//     8:"backspace", 27:"esc", 32:"space"}
 	buttonmap map[int]string = map[int]string{1: "left", 2: "right", 3: "center"}
 )
 
@@ -43,49 +37,20 @@ type Node struct {
 	Peers         map[string]rs.SyncServiceClient
 	myaddr        string
 	rs.UnimplementedSyncServiceServer
-	maxX   int
-	maxY   int
-	Window string
+	displayRect rgo.Rect
+	Window      string
 }
+
+//region Setup
 
 // This function is the most basic initialization of the node
 func Start(startingstate *s.StateInfo, machine *s.MachineInfo) Node {
 	log.Println("HI IT'S ME THE NODE!!!")
-	x, y := rgo.GetScreenSize()
+	rect := rgo.GetDisplayRect(machine.Displaynum)
 	// mynode := Node{Leader: leader, maxX: rgo.GetScreenRect().W, maxY: rgo.GetScreenRect().H, Window: window}
 
-	mynode := Node{Leader: startingstate.Leader, maxX: x, maxY: y, Window: machine.Window}
+	mynode := Node{Leader: startingstate.Leader, displayRect: rect, Window: machine.Window}
 	return mynode
-}
-
-// This function does the actual running- it initializes the fields of the node before listening and starting up the heartbeat
-func (node *Node) Run(startingstate *s.StateInfo, machine *s.MachineInfo) {
-	// node.myaddr = "localhost:" + port
-	if machine.Ip == "-1" {
-		node.myaddr = GetLocalIP() + ":" + machine.Port
-	} else {
-		node.myaddr = machine.Ip + ":" + machine.Port
-	}
-
-	log.Println(node.myaddr)
-	startingstate.Addrs = slices.DeleteFunc(startingstate.Addrs, func(addr string) bool { return node.myaddr == addr })
-	node.Peers = make(map[string]rs.SyncServiceClient)
-
-	go node.StartListening()
-
-	time.Sleep(5 * time.Second)
-	node.createPeers(startingstate.Addrs)
-	log.Println("HI I AM RUNNING")
-
-	log.Println(node.Peers)
-	time.Sleep(time.Second)
-
-	if node.Leader {
-		node.currentleader = node.myaddr
-		node.BroadcastNewLeader()
-	}
-
-	node.DoHeartbeat()
 }
 
 // Got this directly from stackoverflow
@@ -103,29 +68,6 @@ func GetLocalIP() string {
 		}
 	}
 	return ""
-}
-
-// Make sure we're in the right window
-func CheckRightWindow(window string) bool {
-	active := strings.ToLower(rgo.GetTitle())
-	return strings.Contains(active, window)
-}
-
-// This function gets called in another goroutine and starts listening
-func (node *Node) StartListening() {
-	lis, err := net.Listen("tcp", node.myaddr)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	grpcServer := grpc.NewServer() // n is for serving purpose
-
-	rs.RegisterSyncServiceServer(grpcServer, node)
-
-	// start listening
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
 }
 
 // This function creates a client for every peer listed in the array of peer IPs
@@ -154,32 +96,88 @@ func (node *Node) createClient(addr string) {
 	log.Printf("Greeting from other node: %s", response.GetRet())
 }
 
+//endregion Setup
+
+//region Startup
+
+// This function does the actual running- it initializes the fields of the node before listening and starting up the heartbeat
+func (node *Node) Run(startingstate *s.StateInfo, machine *s.MachineInfo) {
+	// node.myaddr = "localhost:" + port
+	if machine.Ip == "-1" {
+		node.myaddr = GetLocalIP() + ":" + machine.Port
+	} else {
+		node.myaddr = machine.Ip + ":" + machine.Port
+	}
+
+	log.Println(node.myaddr)
+	startingstate.Addrs = slices.DeleteFunc(startingstate.Addrs, func(addr string) bool { return node.myaddr == addr })
+	node.Peers = make(map[string]rs.SyncServiceClient)
+
+	go node.StartListening()
+
+	node.createPeers(startingstate.Addrs)
+	log.Println("HI I AM RUNNING")
+
+	log.Println(node.Peers)
+
+	if node.Leader {
+		node.currentleader = node.myaddr
+		node.BroadcastNewLeader()
+	}
+
+	node.DoHeartbeat()
+}
+
+// This function gets called in another goroutine and starts listening
+func (node *Node) StartListening() {
+	lis, err := net.Listen("tcp", node.myaddr)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	grpcServer := grpc.NewServer() // n is for serving purpose
+
+	rs.RegisterSyncServiceServer(grpcServer, node)
+
+	// start listening
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+//endregion Startup
+
+//region Utils
+
+// Make sure we're in the right window
+func CheckRightWindow(window string) bool {
+	active := strings.ToLower(rgo.GetTitle())
+	return strings.Contains(active, window)
+}
+
 // This is just a test function to make sure the node exists and it kind of outdated
 func (node *Node) PrintStuff() {
 	log.Println("I am printing stuff")
 }
 
+func percentXY(x int, y int, rect *rgo.Rect) (xp, yp float64) {
+	xp = float64(x) / float64(rect.W)
+	yp = float64(y) / float64(rect.H)
+	return
+}
+
+//endregion Utils
+
+//region RPCs
+
+//region Exposed RPCs
+
 // Once per second, sends heartbeat out
 func (node *Node) DoHeartbeat() {
 	for {
 		time.Sleep(time.Second)
-		node.BroadcastHeartbeat()
+		node.broadcastHeartbeat()
 		// log.Println(node.Peers)
-	}
-}
-
-// Sends a heartbeat signal to every peer
-func (node *Node) BroadcastHeartbeat() {
-	for ip, client := range node.Peers {
-		r, err := client.HeartbeatInternal(context.Background(), &rs.HeartbeatRequest{Beat: node.myaddr})
-
-		if err != nil {
-			log.Printf("HEARTBEAT TO %s FAILED\n", ip)
-		} else if r.GetRet() == node.myaddr {
-			// log.Printf("GOT HEARTBEAT FROM: %s\n", ip)
-		} else {
-			log.Fatalf("SOMETHING WENT WRONG AND %s RESPONDED WITH %s INSTEAD OF %s\n", ip, r.GetRet(), node.myaddr)
-		}
 	}
 }
 
@@ -199,8 +197,7 @@ func (node *Node) BroadcastNewLeader() {
 // Sends a signal to click a mouse button to every peer
 func (node *Node) SendClick(button int, x int, y int) {
 	buttonString := buttonmap[button]
-	newX := float64(x) / float64(node.maxX)
-	newY := float64(y) / float64(node.maxY)
+	newX, newY := percentXY(x, y, &node.displayRect)
 
 	for ip, client := range node.Peers {
 		response, err := client.SendClickInternal(context.Background(), &rs.ClickRequest{
@@ -276,30 +273,49 @@ func (node *Node) SendScroll(direction string) {
 	}
 }
 
+//endregion Exposed RPCs
+
+//region Internal RPCs
+
 //
 // //
 // // // THESE FOLLOWING 5 FUNCTIONS ACTUALLY DO THE INPUT USING ROBOTGO, LIKE CLICKING THE MOUSE AT A CERTAIN X AND Y COORDINATE
 // //
 //
 
+// Sends a heartbeat signal to every peer
+func (node *Node) broadcastHeartbeat() {
+	for ip, client := range node.Peers {
+		r, err := client.HeartbeatInternal(context.Background(), &rs.HeartbeatRequest{Beat: node.myaddr})
+
+		if err != nil {
+			log.Printf("HEARTBEAT TO %s FAILED\n", ip)
+		} else if r.GetRet() == node.myaddr {
+			// log.Printf("GOT HEARTBEAT FROM: %s\n", ip)
+		} else {
+			log.Fatalf("SOMETHING WENT WRONG AND %s RESPONDED WITH %s INSTEAD OF %s\n", ip, r.GetRet(), node.myaddr)
+		}
+	}
+}
+
 func (node *Node) HeartbeatInternal(ctx context.Context, in *rs.HeartbeatRequest) (*rs.HeartbeatResponse, error) {
 	return &rs.HeartbeatResponse{Ret: in.GetBeat()}, nil
 }
 
-func (node *Node) SendClickInternal(ctx context.Context, in *rs.ClickRequest) (*rs.ClickResponse, error) {
-	x, y := rgo.GetScreenSize()
-	log.Printf("Max X: %d, Max Y: %d, Percent X: %f, Percent Y: %f", node.maxX, node.maxY, in.GetXPercent(), in.GetYPercent())
-	log.Printf("New Max X: %d, New Max Y: %d", x, y)
-	if CheckRightWindow(node.Window) {
-		newX := int(in.GetXPercent() * float64(node.maxX))
-		newY := int(in.GetYPercent() * float64(node.maxY))
-		rgo.MoveClick(newX, newY, in.GetButton())
-		return &rs.ClickResponse{Success: true}, nil
-	} else {
-		log.Printf("Not in right window- current window: %s, desired string: %s\n", strings.ToLower(rgo.GetTitle()), node.Window)
-		return &rs.ClickResponse{Success: false}, nil
-	}
-}
+// func (node *Node) SendClickInternal(ctx context.Context, in *rs.ClickRequest) (*rs.ClickResponse, error) {
+// 	x, y := rgo.GetScreenSize()
+// 	log.Printf("Max X: %d, Max Y: %d, Percent X: %f, Percent Y: %f", node.maxX, node.maxY, in.GetXPercent(), in.GetYPercent())
+// 	log.Printf("New Max X: %d, New Max Y: %d", x, y)
+// 	if CheckRightWindow(node.Window) {
+// 		newX := int(in.GetXPercent() * float64(node.maxX))
+// 		newY := int(in.GetYPercent() * float64(node.maxY))
+// 		rgo.MoveClick(newX, newY, in.GetButton())
+// 		return &rs.ClickResponse{Success: true}, nil
+// 	} else {
+// 		log.Printf("Not in right window- current window: %s, desired string: %s\n", strings.ToLower(rgo.GetTitle()), node.Window)
+// 		return &rs.ClickResponse{Success: false}, nil
+// 	}
+// }
 
 func (node *Node) SendKeyDownInternal(ctx context.Context, in *rs.KeyDownRequest) (*rs.KeyDownResponse, error) {
 	if CheckRightWindow(node.Window) {
@@ -352,3 +368,7 @@ func (node *Node) UpdateLeader(ctx context.Context, in *rs.LeaderRequest) (*rs.L
 	// if node.currentleader == node.myaddr {node.Leader = false}
 	return &rs.LeaderResponse{}, nil
 }
+
+//endregion Internal RPCs
+
+//endregion RPCs

@@ -12,4 +12,5 @@ type MachineInfo struct {
 	Ip          string
 	Window      string
 	Initialized bool
+	Displaynum  int
 }
