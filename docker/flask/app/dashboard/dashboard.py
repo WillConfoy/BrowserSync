@@ -24,9 +24,9 @@ def dashboard():
 # @socketio.on("create lobby")
 @dashBP.route("/create_lobby")
 def create_lobby():
-    lobby_id = '%010x' % random.randrange(16**10)
+    lobby_id = '%010x' % random.randrange(16**4)
     while lobby_id in lobbies:
-        lobby_id = '%010x' % random.randrange(16**10)
+        lobby_id = '%010x' % random.randrange(16**4)
     
     user_settings = Settings.query.filter_by(user_id=session["user_id"]).first()
     settings = {"port":"50051", "window":"firefox", "host":session["username"]}
